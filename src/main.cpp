@@ -24,7 +24,7 @@ int8_t board1D[64] = {
     0, 0, 0, 0, 0, 0, 0, 0,   // 6th rank
     0, 0, 0, 0, 0, 0, 0, 0,   // 5th rank
     0, 0, 0, 0, 0, 0, 0, 0,   // 4th rank
-    0, 0, 0, 0, 0, 0, 0, 0,   // 3rd rank
+    0, n, n, 0, 0, 0, 0, 0,   // 3rd rank
     P, P, P, P, P, P, P, P,   // 2nd rank
     R, N, B, Q, K, B, N, R    // 1st rank (bottom)
 };
@@ -37,7 +37,7 @@ void setup()
 {
   Serial.begin(9600);
 
-  moves = generateKingMoves(board1D,39);
+  moves = generatePawnMoves(board1D,49);
   Serial.print("\n");
   for(int i = 0; i <=63; i++)
   {
