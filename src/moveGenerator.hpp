@@ -1,25 +1,33 @@
 #ifndef MOVE_GEN
 #define MOVE_GEN
 #include <Arduino.h>
+#include "constans.hpp"
 
 
-constexpr int8_t BOARD_ROWS = 8;
-constexpr int8_t BOARD_COLS = 8;
-constexpr int8_t BOARD_SIZE = BOARD_ROWS * BOARD_COLS;
+uint8_t whiteKingPosition = WHITE_KING_START_POS;
+uint8_t blackKingPosition = BLACK_KING_START_POS;
 
 
-constexpr int8_t BOARD_MIN_ROW = 0;
-constexpr int8_t BOARD_MIN_COL = 0;
-constexpr int8_t BOARD_MAX_ROW_INDEX = BOARD_ROWS - 1;
-constexpr int8_t BOARD_MAX_COL_INDEX = BOARD_COLS - 1;
+void printGrid1D(const int8_t board[64]) {
+    for (int row = 0; row < 8; ++row) {
+        for (int col = 0; col < 8; ++col) {
+            Serial.print(board[row * 8 + col]);
+            Serial.print(" ");
+        }
+        Serial.println();
+    }
+}
 
-
-constexpr int8_t PAWN_WHITE_START_ROW = 6; 
-constexpr int8_t PAWN_BLACK_START_ROW = 1;  
-
-constexpr int8_t EMPTY = 0;
-
-
+void printLongLong(int64_t move){
+    for(int i = 0; i <=63; i++)
+    {
+        if (i%8 == 0)
+        {
+        Serial.print("\n");
+        }
+        Serial.print(int((move >> i) & 1LL));
+    }
+}
 int64_t generateKingMoves(const int8_t board[BOARD_SIZE], int8_t position)
 {
     int8_t baseRow = position / BOARD_COLS;
@@ -220,9 +228,74 @@ int64_t generateKnightMoves(const int8_t board[BOARD_SIZE], int8_t position)
 
 
 int64_t generateEnemyAttacks(const int8_t board[BOARD_SIZE], bool colour){
-    // TODO: IMPLENET THIS AFTER ALL OTHER MOVES FOR CHECK DETECTION
-    return 0LL;
+    int64_t moves = 0LL;
+    for(int8_t i = 0; i < BOARD_SIZE; i++){
+        int8_t piece = board[i];
+        if((piece>0) == colour || piece == EMPTY){continue;};
+        switch (abs(piece))
+        {
+            case(P):
+                moves |= generatePawnMoves(board,i,true);
+                break;
+            case(R):
+                moves |= generateRookMoves(board,i);
+                break;
+            case(N):
+                moves |= generateKnightMoves(board,i);
+                break;
+            case(B):
+                moves |= generateBishopMoves(board,i);
+                break;
+            case(Q):
+                moves |= generateQueenMoves(board,i);
+                break;
+            case(K):
+                moves |= generateKingMoves(board,i);
+                break;
+            default:
+                break;
+        }
+    }
+    return moves;
 }
+
+int64_t moveLegalizer(int8_t board[BOARD_SIZE],int8_t from, int64_t moves){
+    bool colour = board[from] > 0; // white = true, black = false
+    int8_t boardCopy[BOARD_SIZE];
+    int64_t enemyMoves = 0LL;
+    int8_t whiteKingPosCopy = whiteKingPosition;
+    int8_t blackKingPosCopy = blackKingPosition;
+    for(int8_t i = 0; i < 64; i++)
+    {
+        memcpy(boardCopy,board,sizeof(boardCopy));
+        bool bit = (moves >> i) & 1LL;
+        // Serial.print(bit);
+        if(bit){
+            if (boardCopy[from] == K) {
+                whiteKingPosCopy = i;
+            } else if (boardCopy[from] == k) {
+                blackKingPosCopy = i;
+            }
+            boardCopy[i] = boardCopy[from];
+            boardCopy[from] = EMPTY;
+
+            enemyMoves = generateEnemyAttacks(boardCopy,colour);
+
+            if(colour == WHITE){
+                if((enemyMoves >> whiteKingPosCopy) & 1LL){
+                    moves &= ~(1LL << i);
+                }
+            }
+            if(colour == BLACK){
+                if((enemyMoves >> blackKingPosCopy) & 1LL){
+                    moves &= ~(1LL << i);
+                }
+            }
+        }
+    }
+    return moves;
+}
+
 
 
 #endif
