@@ -1,5 +1,5 @@
-#ifndef MOVE_GEN
-#define MOVE_GEN
+#ifndef MOVE_GEN_HPP
+#define MOVE_GEN_HPP
 #include <Arduino.h>
 #include "constants.hpp"
 
