@@ -6,7 +6,7 @@
 
 
 inline bool isWhitePiece(int8_t piece) {
-    return piece > 0;
+    return piece > 0 ? WHITE : BLACK;
 }
 
 
